@@ -105,7 +105,7 @@
 				)
 			);
         		break;
-    		default:
+    		default: //vision api
 			$objID = $json_obj->events[0]->message->id;
 			$url = 'https://api.line.me/v2/bot/message/'.$objID.'/content';
 			$ch = curl_init($url);
@@ -124,7 +124,7 @@
 						array (
 							"image" => array (
 								"source" => array (
-									"imageUri" => "http://139.59.123.8/chtChatBot/20180109_LineBot/".$objID.".jpeg"
+									"imageUri" => "http://139.59.123.8/chtChatBot/wen/".$objID.".jpeg"
 								)
 							),
 							"features" => array (
