@@ -6,7 +6,24 @@ $json_obj = json_decode($json_str);//從string格式轉為jason格式
 	$sender_userid = $json_obj->events[0]->source->userId;
 	$sender_txt = $json_obj->events[0]->message->text;
 	$sender_replyToken = $json_obj->events[0]->replyToken;
-  	$response = array (
+ 	$line_server_url = 'https://api.line.me/v2/bot/message/push';
+
+ //用sender_txt來分辨要發何種訊息
+ switch ($sender_txt) {
+    		case "push":
+        		$response = array (
+				"to" => $sender_userid,
+				"messages" => array (
+					array (
+						"type" => "text",
+						"text" => "Hello, YOU SAY ".$sender_txt
+					)
+				)
+			);
+        		break;
+    		case "reply":
+			$line_server_url = 'https://api.line.me/v2/bot/message/reply';
+        		$response = array (
 				"replyToken" => $sender_replyToken,
 				"messages" => array (
 					array (
@@ -14,8 +31,22 @@ $json_obj = json_decode($json_str);//從string格式轉為jason格式
 						"text" => "Hello, YOU SAY ".$sender_txt
 					)
 				)
-		);
-
+			);
+        		break;
+		case "image":
+			$line_server_url = 'https://api.line.me/v2/bot/message/reply';
+        		$response = array (
+				"replyToken" => $sender_replyToken,
+				"messages" => array (
+					array (
+						"type" => "image",
+						"originalContentUrl" => "https://www.w3schools.com/css/paris.jpg",
+						"previewImageUrl" => "https://www.nasa.gov/sites/default/themes/NASAPortal/images/feed.png"
+					)
+				)
+			);
+        		break;
+ }
 	$myfile = fopen("log.txt","w+") or die("Unable to open file!");
 	fwrite($myfile, "\xEF\xBB\xBF".$json_str);//在字串前加入\xef....轉成utf8格式，以防中文變亂碼
 	fclose($myfile);
