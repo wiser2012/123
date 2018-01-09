@@ -2,6 +2,10 @@
 $json_str = file_get_contents('php://input');//接收request的body
 $json_obj = json_decode($json_str);//從string格式轉為jason格式
 
+$myfile = fopen("log.txt","w+") or die("Unable to open file!");
+fwrite($myfile, "\xEF\xBB\xBF".$json_str);//在字串前加入\xef....轉成utf8格式，以防中文變亂碼
+fclose($myfile);
+
 //產生回傳給line server的格式
 	$sender_userid = $json_obj->events[0]->source->userId;
 	$sender_txt = $json_obj->events[0]->message->text;
@@ -72,11 +76,38 @@ $json_obj = json_decode($json_str);//從string格式轉為jason格式
 					)
 				)
 			);
+		 case "button":
+			$line_server_url = 'https://api.line.me/v2/bot/message/reply';
+        		$response = array (
+				"replyToken" => $sender_replyToken,
+				"messages" => array (
+					array (
+						"type" => "template",
+						"altText" => "this is a buttons template",
+						"template" => array (
+							"type" => "buttons",
+							"thumbnailImageUrl" => "https://www.w3schools.com/css/paris.jpg",
+							"title" => "Menu",
+							"text" => "Please select",
+							"actions" => array (
+								array (
+									"type" => "postback",
+									"label" => "Buy",
+									"data" => "action=buy&itemid=123"
+								),
+								array (
+									"type" => "postback",
+                   							"label" => "Add to cart",
+                    							"data" => "action=add&itemid=123"
+								)
+							)
+						)
+					)
+				)
+			);
         		break;
  }
-	$myfile = fopen("log.txt","w+") or die("Unable to open file!");
-	fwrite($myfile, "\xEF\xBB\xBF".$json_str);//在字串前加入\xef....轉成utf8格式，以防中文變亂碼
-	fclose($myfile);
+
 
 //回傳給line server
 	$header[] = "Content-Type: application/json";
