@@ -68,7 +68,7 @@ $json_obj = json_decode($json_str);//從string格式轉為jason格式
 					array (
 						"type" => "sticker",
 						"packageId" => "1",
-						"stickerId" => "001"
+						"stickerId" => "018"
 					)
 				)
 			);
