@@ -1,19 +1,16 @@
 <?php
-$json_str = file_get_contents('php://input');//接收request的body
-$json_obj = json_decode($json_str);//從string格式轉為jason格式
-
-$myfile = fopen("log.txt","w+") or die("Unable to open file!");
-fwrite($myfile, "\xEF\xBB\xBF".$json_str);//在字串前加入\xef....轉成utf8格式，以防中文變亂碼
-fclose($myfile);
-
-//產生回傳給line server的格式
+	//接收request的body(可以接收除了Content-type為multipart/form-data的資料)
+	$json_str = file_get_contents('php://input'); 
+	$json_obj = json_decode($json_str); //轉成json格式
+	
+	$myfile = fopen("log.txt", "w+") or die("Unable to open file!"); //設定一個log.txt，用來印訊息
+	fwrite($myfile, "\xEF\xBB\xBF".$json_str); //在字串前加上\xEF\xBB\xBF轉成utf8格式
+	//產生回傳給line server的格式
 	$sender_userid = $json_obj->events[0]->source->userId;
 	$sender_txt = $json_obj->events[0]->message->text;
 	$sender_replyToken = $json_obj->events[0]->replyToken;
- 	$line_server_url = 'https://api.line.me/v2/bot/message/push';
-
- //用sender_txt來分辨要發何種訊息
- switch ($sender_txt) {
+	$line_server_url = 'https://api.line.me/v2/bot/message/push';
+	switch ($sender_txt) {
     		case "push":
         		$response = array (
 				"to" => $sender_userid,
@@ -49,7 +46,8 @@ fclose($myfile);
 					)
 				)
 			);
-		 case "location":
+        		break;
+		case "location":
 			$line_server_url = 'https://api.line.me/v2/bot/message/reply';
         		$response = array (
 				"replyToken" => $sender_replyToken,
@@ -72,11 +70,12 @@ fclose($myfile);
 					array (
 						"type" => "sticker",
 						"packageId" => "1",
-						"stickerId" => "018"
+						"stickerId" => "1"
 					)
 				)
 			);
-		 case "button":
+        		break;
+		case "button":
 			$line_server_url = 'https://api.line.me/v2/bot/message/reply';
         		$response = array (
 				"replyToken" => $sender_replyToken,
@@ -106,18 +105,74 @@ fclose($myfile);
 				)
 			);
         		break;
- }
-
-
-//回傳給line server
+    		default:
+			$objID = $json_obj->events[0]->message->id;
+			$url = 'https://api.line.me/v2/bot/message/'.$objID.'/content';
+			$ch = curl_init($url);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+			curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+				'Authorization: Bearer LCM7DL4lpsCCMR9sE6yZEA5vtYagTslkDZ1K7zt57tLNXATVaLVTZbqGdZ090uklVSKDdtGRquFZZsLZ7U0QT+9N8w5QBIpmSd4sN5h3ReeT5hgbqstH/wzrbPAKYs3F+AIgS+Kr7+UQpTTiZFzRRAdB04t89/1O/w1cDnyilFU=			));
+				
+			$json_content = curl_exec($ch);
+			curl_close($ch);
+			$imagefile = fopen($objID.".jpeg", "w+") or die("Unable to open file!"); //設定一個log.txt，用來印訊息
+			fwrite($imagefile, $json_content); 
+			fclose($imagefile);
+        		$header[] = "Content-Type: application/json";
+			$post_data = array (
+				"requests" => array (
+						array (
+							"image" => array (
+								"source" => array (
+									"imageUri" => "http://139.59.123.8/chtChatBot/20180109_LineBot/".$objID.".jpeg"
+								)
+							),
+							"features" => array (
+								array (
+									"type" => "TEXT_DETECTION",
+									"maxResults" => 1
+								)
+							)
+						)
+					)
+			);
+			$ch = curl_init('https://vision.googleapis.com/v1/images:annotate?key=AIzaSyCiyGiCfjzzPR1JS8PrAxcsQWHdbycVwmg');                                                                      
+			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");                                                                     
+			curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($post_data));                                                                  
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);                                                                      
+			curl_setopt($ch, CURLOPT_HTTPHEADER, $header);                                                                                                   
+			$result = json_decode(curl_exec($ch));
+			$result_ary = mb_split("\n",$result -> responses[0] -> fullTextAnnotation -> text);
+			$ans_txt = "這張發票沒用了，你又製造了一張垃圾";
+			foreach ($result_ary as $val) {
+				if($val == "AG-26272435"){
+					$ans_txt = "恭喜您中獎啦，快分紅!!";
+				}
+			}
+			$response = array (
+				"to" => $sender_userid,
+				"messages" => array (
+					array (
+						"type" => "text",
+						"text" => $ans_txt
+					)
+				)
+			);
+        		break;
+	}
+	
+	
+	//fwrite($myfile, "\xEF\xBB\xBF".json_encode($response)); //在字串前加上\xEF\xBB\xBF轉成utf8格式
+	fclose($myfile);
+		
+	//回傳給line server
 	$header[] = "Content-Type: application/json";
-	$header[] = "Authorization: Bearer Nzaj6VdKQbbgKu8cYt2jyEZODY35qldsN85WDPV91SQUKCYtqyQzqPh4KIpSQU4sVSKDdtGRquFZZsLZ7U0QT+9N8w5QBIpmSd4sN5h3RecswoLRhtOBb7rSbIyyXSpv9Kb1200atA/cJUSk6OB1oQdB04t89/1O/w1cDnyilFU=";
-	$ch = curl_init("https://api.line.me/v2/bot/message/reply");                                                                      
+	$header[] = "Authorization: Bearer LCM7DL4lpsCCMR9sE6yZEA5vtYagTslkDZ1K7zt57tLNXATVaLVTZbqGdZ090uklVSKDdtGRquFZZsLZ7U0QT+9N8w5QBIpmSd4sN5h3ReeT5hgbqstH/wzrbPAKYs3F+AIgS+Kr7+UQpTTiZFzRRAdB04t89/1O/w1cDnyilFU=";
+	$ch = curl_init($line_server_url);                                                                      
 	curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");                                                                     
 	curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($response));                                                                  
 	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);                                                                      
 	curl_setopt($ch, CURLOPT_HTTPHEADER, $header);                                                                                                   
 	$result = curl_exec($ch);
-	curl_close($ch); 
-
+	curl_close($ch);
 ?>
