@@ -111,7 +111,7 @@
 			$ch = curl_init($url);
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 			curl_setopt($ch, CURLOPT_HTTPHEADER, array(
-				'Authorization: Bearer LCM7DL4lpsCCMR9sE6yZEA5vtYagTslkDZ1K7zt57tLNXATVaLVTZbqGdZ090uklVSKDdtGRquFZZsLZ7U0QT+9N8w5QBIpmSd4sN5h3ReeT5hgbqstH/wzrbPAKYs3F+AIgS+Kr7+UQpTTiZFzRRAdB04t89/1O/w1cDnyilFU=
+			'Authorization: Bearer LCM7DL4lpsCCMR9sE6yZEA5vtYagTslkDZ1K7zt57tLNXATVaLVTZbqGdZ090uklVSKDdtGRquFZZsLZ7U0QT+9N8w5QBIpmSd4sN5h3ReeT5hgbqstH/wzrbPAKYs3F+AIgS+Kr7+UQpTTiZFzRRAdB04t89/1O/w1cDnyilFU='
 			));
 				
 			$json_content = curl_exec($ch);
@@ -137,7 +137,7 @@
 						)
 					)
 			);
-			$ch = curl_init('https://vision.googleapis.com/v1/images:annotate?key=AIzaSyCiyGiCfjzzPR1JS8PrAxcsQWHdbycVwmg');                                                                      
+			$ch = curl_init('https://vision.googleapis.com/v1/images:annotate?key=AIzaSyDWTbUx93NyO1gjjfV34zkpP_3Hy4Y-kbk');                                                                      
 			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");                                                                     
 			curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($post_data));                                                                  
 			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);                                                                      
